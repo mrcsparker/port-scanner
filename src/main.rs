@@ -1,40 +1,26 @@
-use rayon::prelude::*;
-use std::net::{TcpStream, UdpSocket};
+use clap::Parser;
+use pscan::port_scanner::PortScanner;
 
-struct PortScanner {
-    start_port: u16,
-    end_port: u16,
-    target_ip: String,
-}
-
-impl PortScanner {
-    fn new(start_port: u16, end_port: u16, target_ip: String) -> PortScanner {
-        PortScanner {
-            start_port,
-            end_port,
-            target_ip,
-        }
-    }
-
-    fn scan(&self) -> Vec<u16> {
-        (self.start_port..self.end_port + 1)
-            .into_par_iter()
-            .filter_map(|port| {
-                let tcp_check = TcpStream::connect(format!("{}:{}", self.target_ip, port));
-                let udp_check = UdpSocket::bind(format!("{}:{}", self.target_ip, port));
-
-                if tcp_check.is_ok() || udp_check.is_ok() {
-                    Some(port)
-                } else {
-                    None
-                }
-            })
-            .collect()
-    }
+/// Command-line arguments for the port scanning tool.
+#[derive(Debug, Parser)]
+#[command(author, version, about, long_about = None)]
+struct Args {
+    /// Host name to scan. Can be specified using the -t or --target options.
+    #[arg(short, long, default_value = "127.0.0.1")]
+    target: String,
 }
 
 fn main() {
-    let scanner = PortScanner::new(1, 1024, String::from("127.0.0.1"));
+    // Parse command-line arguments using Clap.
+    let args = Args::parse();
+
+    // Create a new PortScanner instance with the specified configuration.
+    // The scanner will scan ports from 1 to 1024 (inclusive) on the target host.
+    let scanner = PortScanner::new(1, 1024, args.target);
+
+    // Scan for open ports on the target host using the PortScanner.
     let open_ports = scanner.scan();
-    println!("Open Ports: {open_ports:?}");
+
+    // Print the list of open ports found during the scan.
+    println!("Open Ports: {:?}", open_ports);
 }
