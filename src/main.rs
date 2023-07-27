@@ -1,5 +1,5 @@
 use clap::Parser;
-use pscan::port_scanner::PortScanner;
+use port_scanner::port_scanner::PortScanner;
 
 /// Command-line arguments for the port scanning tool.
 #[derive(Debug, Parser)]
